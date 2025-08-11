@@ -1,0 +1,93 @@
+---
+layout: post
+title: "绵羊对应人类同源基因"
+subtitle: "get_human_symbol.sh 脚本使用说明"
+author: "CTR"
+header-style: text
+tags:
+  - 转录组
+  - 小工具
+---
+
+## <font style="color:rgb(0, 0, 0);">简介</font>
+以<font style="color:rgb(0, 0, 0);">ARS-UI_Ramb_v3.0为注释模板的</font>羔羊转录组中充斥着状如LOC101104164的基因，为了找到这些不明所以的基因的功能，及找到人类同源物的基因名，我写了这个小玩意。
+
+`<font style="color:rgb(0, 0, 0);">get_human_symbol.sh</font>`<font style="color:rgb(0, 0, 0);"> 旨在自动根据绵羊 (Ovis aries) 的基因列表，查找其在人类 (Homo sapiens) 中的直系同源基因 (Orthologs)，并最终生成一个清晰的、绵羊基因与人类基因Symbol的对应关系表。</font>
+
+<font style="color:rgb(0, 0, 0);">该脚本主要处理由 NCBI Datasets 命令行工具生成的基因摘要文件，通过一系列的数据筛选、在线查询和结果合并步骤，极大地简化了跨物种同源基因的批量查找过程。</font>
+
+## <font style="color:rgb(0, 0, 0);">核心功能</font>
+<font style="color:rgb(0, 0, 0);">脚本的执行流程包含以下几个关键步骤：</font>
+
+1. **<font style="color:rgb(0, 0, 0);">读取输入</font>**<font style="color:rgb(0, 0, 0);">：接收一个输入文件，其中每行为一个geneid。</font>
+2. **<font style="color:rgb(0, 0, 0);">查询数据</font>**<font style="color:rgb(0, 0, 0);">：查询基因的描述，并找到 对应的</font>`<font style="color:rgb(0, 0, 0);">Gene Group Identifier</font>`<font style="color:rgb(0, 0, 0);">的基因条目。</font>
+3. **<font style="color:rgb(0, 0, 0);">提取ID</font>**<font style="color:rgb(0, 0, 0);">：从筛选后的数据中提取出所有唯一的</font><font style="color:rgb(0, 0, 0);"> </font>`<font style="color:rgb(0, 0, 0);">Gene Group Identifier</font>`<font style="color:rgb(0, 0, 0);">。</font>
+4. **<font style="color:rgb(0, 0, 0);">查询NCBI</font>**<font style="color:rgb(0, 0, 0);">：使用提取出的ID列表，通过</font><font style="color:rgb(0, 0, 0);"> </font>`<font style="color:rgb(0, 0, 0);">datasets</font>`<font style="color:rgb(0, 0, 0);"> </font><font style="color:rgb(0, 0, 0);">工具批量查询NCBI数据库，获取这些同源组中包含的所有物种的基因信息。</font>
+5. **<font style="color:rgb(0, 0, 0);">过滤人类基因</font>**<font style="color:rgb(0, 0, 0);">：从上一步的查询结果中，精确地筛选出物种为“Homo sapiens”的基因，并提取其基因Symbol和所属的</font>`<font style="color:rgb(0, 0, 0);">Gene Group Identifier</font>`<font style="color:rgb(0, 0, 0);">。</font>
+6. **<font style="color:rgb(0, 0, 0);">合并与映射</font>**<font style="color:rgb(0, 0, 0);">：通过以</font><font style="color:rgb(0, 0, 0);"> </font>`<font style="color:rgb(0, 0, 0);">Gene Group Identifier</font>`<font style="color:rgb(0, 0, 0);"> </font><font style="color:rgb(0, 0, 0);">为桥梁，将原始的绵羊基因Symbol与新找到的人类基因Symbol进行精确匹配和连接。</font>
+7. **<font style="color:rgb(0, 0, 0);">生成报告</font>**<font style="color:rgb(0, 0, 0);">：将最终的匹配结果输出到一个名为</font><font style="color:rgb(0, 0, 0);"> </font>`<font style="color:rgb(0, 0, 0);">sheep2human_symbol.tsv</font>`<font style="color:rgb(0, 0, 0);"> </font><font style="color:rgb(0, 0, 0);">的制表符分隔文件中，并自动添加表头。</font>
+8. **<font style="color:rgb(0, 0, 0);">自动清理</font>**<font style="color:rgb(0, 0, 0);">：在任务成功执行后，自动删除所有产生的中间临时文件，保持工作目录的整洁。</font>
+
+## <font style="color:rgb(0, 0, 0);">环境准备</font>
+<font style="color:rgb(0, 0, 0);">在运行此脚本之前，请确保您的系统满足以下两个条件：</font>
+
+### <font style="color:rgb(0, 0, 0);">1. 安装 NCBI Datasets</font>
+<font style="color:rgb(0, 0, 0);">本脚本依赖于 NCBI 的命令行工具</font><font style="color:rgb(0, 0, 0);"> </font>`<font style="color:rgb(0, 0, 0);">datasets</font>`<font style="color:rgb(0, 0, 0);"> </font><font style="color:rgb(0, 0, 0);">来查询数据库。您需要安装特定版本的</font><font style="color:rgb(0, 0, 0);"> </font>`<font style="color:rgb(0, 0, 0);">ncbi-datasets-cli</font>`<font style="color:rgb(0, 0, 0);">。</font>
+
++ **<font style="color:rgb(0, 0, 0);">必需版本</font>**<font style="color:rgb(0, 0, 0);">: </font>`<font style="color:rgb(0, 0, 0);">v18.3.1</font>`
+
+### <font style="color:rgb(0, 0, 0);">2. 赋予脚本执行权限</font>
+<font style="color:rgb(0, 0, 0);">为了能够像程序一样直接运行</font><font style="color:rgb(0, 0, 0);"> </font>`<font style="color:rgb(0, 0, 0);">.sh</font>`<font style="color:rgb(0, 0, 0);"> </font><font style="color:rgb(0, 0, 0);">脚本文件，您需要为其添加可执行权限。这是一个必需的步骤。</font>
+
++ **<font style="color:rgb(0, 0, 0);">命令</font>**<font style="color:rgb(0, 0, 0);">:</font><font style="color:rgb(0, 0, 0);"> </font>`<font style="color:rgb(0, 0, 0);">chmod +x</font>`
+
+<font style="color:rgb(0, 0, 0);">请在终端中运行：</font>
+
+```plain
+chmod +x get_human_symbol.sh
+```
+
+<font style="color:rgb(0, 0, 0);">完成此操作后，您就可以直接通过</font><font style="color:rgb(0, 0, 0);"> </font>`<font style="color:rgb(0, 0, 0);">./get_human_symbol.sh</font>`<font style="color:rgb(0, 0, 0);"> </font><font style="color:rgb(0, 0, 0);">的方式来调用它了。</font>
+
+## <font style="color:rgb(0, 0, 0);">使用方法</font>
+**<font style="color:rgb(0, 0, 0);">运行脚本</font>**<font style="color:rgb(0, 0, 0);"> 脚本的运行方式非常简单，支持 </font>`<font style="color:rgb(0, 0, 0);">--help</font>`<font style="color:rgb(0, 0, 0);"> 选项来查看帮助。</font>
+
+**<font style="color:rgb(0, 0, 0);">查看帮助信息</font>**<font style="color:rgb(0, 0, 0);">:</font>
+
+```plain
+./get_human_symbol.sh --help
+```
+
+**<font style="color:rgb(0, 0, 0);">处理您的数据文件</font>**<font style="color:rgb(0, 0, 0);">: 将您的输入文件名作为脚本的第一个参数。例如，如果您的数据文件是</font><font style="color:rgb(0, 0, 0);"> </font>`<font style="color:rgb(0, 0, 0);">sheep_genes_summary.tsv</font>`<font style="color:rgb(0, 0, 0);">：</font>
+
+    - <font style="color:rgb(0, 0, 0);">Bash</font>
+
+```plain
+./get_human_symbol.sh sheep_genes_summary.tsv
+```
+
+## <font style="color:rgb(0, 0, 0);">输入与输出</font>
+### <font style="color:rgb(0, 0, 0);">输入文件格式</font>
+<font style="color:rgb(0, 0, 0);">脚本的输入文件 </font>**<font style="color:rgb(0, 0, 0);">必须是</font>**<font style="color:rgb(0, 0, 0);"> 仅包含基因id文件，如下，不需要表头：</font>
+
+| 114112203 |
+| --- |
+| 114110836 |
+| 114113923 |
+| 114112459 |
+| ... |
+
+
+### <font style="color:rgb(0, 0, 0);">输出文件格式</font>
+<font style="color:rgb(0, 0, 0);">脚本成功运行后，会生成一个名为 </font>`<font style="color:rgb(0, 0, 0);">sheep2human_symbol.tsv</font>`<font style="color:rgb(0, 0, 0);"> 的文件。该文件包含三列，以制表符分隔：</font>
+
+| Gene_Group_Identifier | <font style="color:rgb(0, 0, 0);">Sheep_Symbol</font> | <font style="color:rgb(0, 0, 0);">Human_Symbol</font> |
+| --- | --- | --- |
+| 100130520 | LOC101104164 | <font style="color:rgb(0, 0, 0);">CD300H</font> |
+| 100131801 | LOC101122597 | <font style="color:rgb(0, 0, 0);">PET100</font> |
+| 100303755 | LOC105616782  | <font style="color:rgb(0, 0, 0);">PET117</font> |
+| ... | ... | <font style="color:rgb(0, 0, 0);">...</font> |
+
+
+此外，还会有一个ortholog_results.tsv, 其中包含了所有输入id对应的描述，如keratin-associated protein 7-1-like.
+
